@@ -105,7 +105,6 @@ class Molecule{
 		int N_els_b_ = 0;
 		Container coords_;
 		std::vector<int> charges_;
-		//std::vector<Container> basis_;
 		std::vector<BasisFunction> basis_ = {};
 		IntegralBox integrals_;
 		mtrx::Matrix<double> matC_;
@@ -127,7 +126,7 @@ class Molecule{
 
 template<typename Container>
 mtrx::Matrix<double> Molecule<Container>::Hessian(const std::string &method, bool use_prev_C){
-	//this->Normalize_Coords(); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//this->Normalize_Coords(); //здесь пока швабры держат потолок
 	Container norm_coords;
 	Container res;
 	for(unsigned int i = 0; i < coords_.size(); ++i){
@@ -263,24 +262,10 @@ mtrx::Matrix<double> Molecule<Container>::BuildP_UHF(mtrx::Matrix<double> matC, 
 	}
 	return matP;
 }
-/*
-template<typename Container>
-void Molecule<Container>::Optimize_RHF(){
-	Container res;
-	mtrx::GradMin([this, &res](const Container &v){
-			//Molecule<Container> res = (*this);
-			double energy;
-			res = this->coords_;
-			this->coords_ = v;
-			energy = this->Ee_RHF();
-			this->coords_ = res;
-			return energy;
-		}, this->coords_);
-}*/
 
 template<typename Container>
 bool Molecule<Container>::TS_Refine(const std::string &method, bool use_prev_C){
-	//this->Normalize_Coords(); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//this->Normalize_Coords(); //здесь те же швабры уперты в такой же потолок, как и выше
 	Container norm_coords;
 	Container res;
 	for(unsigned int i = 0; i < coords_.size(); ++i){
@@ -312,14 +297,13 @@ bool Molecule<Container>::TS_Refine(const std::string &method, bool use_prev_C){
 				++k;
 			}
 		}
-		//this->Print();
 		return result;
 }
 
 template<typename Container>
 void Molecule<Container>::Optimize(const std::string &method, bool use_prev_C){
 	using namespace std::string_literals;
-	//this->Normalize_Coords(); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//this->Normalize_Coords(); 
 	Container norm_coords;
 	Container res;
 	
@@ -354,42 +338,6 @@ void Molecule<Container>::Optimize(const std::string &method, bool use_prev_C){
 			}
 		}
 }
-/*
-template<typename Container>
-void Molecule<Container>::Optimize_UHF(){
-	//this->Normalize_Coords(); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	Container norm_coords;
-	Container res;
-	for(std::size_t i = 0; i < coords_.size(); ++i){
-		if(i <= 2 || i == 4 || i == 5 || i == 8) continue;
-		else norm_coords.push_back(coords_[i]);
-	}
-	mtrx::GradMin([this, &res](const Container &v){
-			//Molecule<Container> res = (*this);
-			double energy;
-			int k = 0;
-			res = this->coords_;
-			//this->coords_ = v;
-			for(std::size_t i = 0; i < coords_.size(); ++i){
-				if(i <= 2 || i == 4 || i == 5 || i == 8) coords_[i] = 0;
-				else {
-					coords_[i] = v[k];
-					++k;
-				}
-			}
-			energy = this->Ee_UHF(false);
-			this->coords_ = res;
-			return energy;
-		}, norm_coords);
-		int k = 0;
-		for(std::size_t i = 0; i < coords_.size(); ++i){
-			if(i <= 2 || i == 4 || i == 5 || i == 8) coords_[i] = 0;
-			else {
-				coords_[i] = norm_coords[k];
-				++k;
-			}
-		}
-}*/
 
 template <typename Container>
 Molecule<Container> TSSearch(Molecule<Container> &m1, Molecule<Container> &m2){
@@ -439,8 +387,6 @@ std::pair<Molecule<Container>, Molecule<Container>> Molecule<Container>::TS_Rela
 	auto eig = mtrx::Eigen_Jacobi(matHes);
 	std::cout << "start Hessian (diag):" << std::endl;
 	mtrx::Print(eig.eig_val);
-	/*Molecule<Container> m1 = (*this);
-	Molecule<Container> m2 = (*this);*/
 	Molecule<Container> m1(this->N_els_, this->coords_, this->charges_);
 	Molecule<Container> m2(this->N_els_, this->coords_, this->charges_);
 	m1.basis_ = this->basis_;
@@ -454,25 +400,20 @@ std::pair<Molecule<Container>, Molecule<Container>> Molecule<Container>::TS_Rela
 	int k = 0;
 	for(int i = 0; i < m1.GetNNucs()*3; ++i){
 		if(i <= 2 || i == 4 || i == 5 || i == 8){
-			 //res[i] = 0;
 			 m1.SetCoord(i, 0);
 			 m2.SetCoord(i, 0);
 		 }
 		else {
 			m1.SetCoord(i, m1.coords_[i] + 0.5*eig.eig_vec.Get(k, 0));
 			m2.SetCoord(i, m2.coords_[i] - 0.5*eig.eig_vec.Get(k, 0));
-			/*res[i] = TS_coords[k];*/
 			++k;
 		}
 	}
-	/*m1.Optimize(method, use_prev_C);
-	m1.Print();*/
 	m2.Optimize(method, use_prev_C);
 	m2.Print();
 	m1.Optimize(method, use_prev_C);
 	m1.Print();
 	return std::make_pair(m1, m2);
-	//return {Molecule<Container>(m1.N_els_, m1.coords_, m1.charges_), Molecule<Container>(m2.N_els_, m2.coords_, m2.charges_)};
 }
 
 template <typename Container>
@@ -490,9 +431,6 @@ Molecule<Container>::Molecule(const Molecule<Container> &other){
 	this->coords_ = other.coords_;
 	this->charges_ = other.charges_;
 	this->basis_ = other.basis_;
-	/*this->matC_ = other.matC_;
-	this->matCa_ = other.matCa_;
-	this->matCb_ = other.matCb_;*/
 	this->hasC_ = false;
 	this->hasCab_ = false;
 	this->n_bas_ = other.n_bas_;
@@ -562,18 +500,9 @@ void Molecule<Container>::AddPz(int i, double a, double dz){
 	basis_.push_back({i, a, 0, 0, -dz});
 	++n_bas_;
 }
-/*
-template <typename Container>
-void Molecule<Container>::AddS(int i, double a){
-	basis_[i].push_back(a);
-	++n_bas_;
-}*/
 
 template <typename Container>
 std::pair<mtrx::Matrix<double>, mtrx::Matrix<double>> Molecule<Container>::BuildSH() const {
-	/*mtrx::Matrix<double> matS(n_bas_, n_bas_);
-	mtrx::Matrix<double> matH(n_bas_, n_bas_);*/
-	//std::pair<int, double> bas_f1, bas_f2;
 	Container rp(3);
 	Container r1(3);
 	Container r2(3);
@@ -624,18 +553,6 @@ std::pair<mtrx::Matrix<double>, mtrx::Matrix<double>> Molecule<Container>::Build
 	}
 	return {matS, matH};
 }
-/*
-template <typename Container>
-std::pair<int, double> Molecule<Container>::Choose(int num_to_choose) const{ //OPTIMIZATION REQUIRED!
-	int num = 0;
-	for(std::size_t i = 0; i < charges_.size(); ++i){
-		for(std::size_t j = 0; j < basis_[i].size(); ++j){
-			if(num == num_to_choose) return {i, basis_[i][j]};
-			++num;
-		}
-	}
-	return {static_cast<int>(charges_.size() - 1), basis_[n_bas_ - 1][n_bas_ - 1]};
-}*/
 
 template <typename Container>
 double Molecule<Container>::Vnn(void) const {
@@ -738,9 +655,6 @@ double Molecule<Container>::Ee_RHF(bool use_prev_C){
 					
 					d = 1./(4*su1) + 1./(4*su2);
 					
-					/*if(PQ2==0) return 16/(su1*su2)/sqrt(PI*(su1+su2))*pow(a1*a2*a3*a4,0.75)*exp(-a1*a2*AB2/su1-a3*a4*CD2/su2);
-					return 8/(su1*su2*sqrt((su1+su2)*(PQ2/(4*d))))*pow(a1*a2*a3*a4,0.75)*exp(-a1*a2*AB2/su1-a3*a4*CD2/su2)*erf(sqrt(PQ2/(4*d)));*/
-					
 					if(std::abs(PQ2) < ZERO_EPS) next_integral = 16/(su1*su2)/sqrt(mtrx::PI*(su1+su2))*pow(a1*a2*a3*a4,0.75)*exp(-a1*a2*AB2/su1-a3*a4*CD2/su2);
 					else next_integral = 8/(su1*su2*sqrt((su1+su2)*(PQ2/(4*d))))*pow(a1*a2*a3*a4,0.75)*exp(-a1*a2*AB2/su1-a3*a4*CD2/su2)*erf(sqrt(PQ2/(4*d)));
 					
@@ -808,14 +722,9 @@ double Molecule<Container>::Ee_RHF(bool use_prev_C){
 template <typename Container>
 double Molecule<Container>::Ee_UHF(bool use_prev_C){
 	int i, j, p, q, k;
-	//std::cout << "here" << std::endl;
 	auto SH = BuildSH();
-	//std::cout << "there" << std::endl;
 	mtrx::Matrix<double> &matH = SH.second;
 	mtrx::Matrix<double> &matS = SH.first;
-	//mtrx::Print(matS);
-	/*auto single_e_res = mtrx::VarTask(SH.second, SH.first);
-	mtrx::Matrix<double> matC = single_e_res.eig_vec;*/
 	mtrx::Matrix<double> matCa;
 	mtrx::Matrix<double> matCb;
 	if(use_prev_C && hasCab_){
@@ -823,19 +732,14 @@ double Molecule<Container>::Ee_UHF(bool use_prev_C){
 		matCb = this->matCb_;
 	}
 	else{
-		//std::cout << "here" << std::endl;
 		auto single_e_res = mtrx::VarTask(matH, matS);
-		//std::cout << "here" << std::endl;
 		matCa = single_e_res.eig_vec;
 		matCb = matCa;
 		mtrx::Matrix<double> matH1(n_bas_, n_bas_);
 		for(i = 0; i < n_bas_; ++i){
 			for(j = i; j < n_bas_; ++j){
-				//matCb.Set(i, j, matCb.Get(i, j) + 0.1*matCb.Get(i, j));
 				matH1.Set(i, j, matH.Get(i, j) + mtrx::GenRand(0., 0.1)*matH.Get(i, j));
 				matH1.Set(j, i, matH1.Get(i, j));
-				/*mtrx::Print(matCa);
-				mtrx::Print(matCb);*/
 			}
 		}
 		matCb = (mtrx::VarTask(matH1, SH.first)).eig_vec;
@@ -909,9 +813,6 @@ double Molecule<Container>::Ee_UHF(bool use_prev_C){
 					
 					d = 1./(4*su1) + 1./(4*su2);
 					
-					/*if(PQ2==0) return 16/(su1*su2)/sqrt(PI*(su1+su2))*pow(a1*a2*a3*a4,0.75)*exp(-a1*a2*AB2/su1-a3*a4*CD2/su2);
-					return 8/(su1*su2*sqrt((su1+su2)*(PQ2/(4*d))))*pow(a1*a2*a3*a4,0.75)*exp(-a1*a2*AB2/su1-a3*a4*CD2/su2)*erf(sqrt(PQ2/(4*d)));*/
-					
 					if(std::abs(PQ2) < ZERO_EPS) next_integral = 16/(su1*su2)/sqrt(mtrx::PI*(su1+su2))*pow(a1*a2*a3*a4,0.75)*exp(-a1*a2*AB2/su1-a3*a4*CD2/su2);
 					else next_integral = 8/(su1*su2*sqrt((su1+su2)*(PQ2/(4*d))))*pow(a1*a2*a3*a4,0.75)*exp(-a1*a2*AB2/su1-a3*a4*CD2/su2)*erf(sqrt(PQ2/(4*d)));
 					
@@ -984,8 +885,6 @@ double Molecule<Container>::Ee_UHF(bool use_prev_C){
 		for(j = 0; j < n_bas_; ++j){
 			for(p = 0; p < n_bas_; ++p){
 				for(q = 0; q < n_bas_; ++q){
-					//Ee += matP.Get(i, j)*matP.Get(p, q)*(2*integrals_.Get(i,j,p,q) - integrals_.Get(i,q,p,j));
-					//Ee += (matPa.Get(i, j)*matPa.Get(p, q) + matPb.Get(i, j)*matPb.Get(p, q))*(integrals_.Get(i,j,p,q) - integrals_.Get(i,q,p,j));
 					Ee += 0.5*(matPa.Get(i, j) + matPb.Get(i, j))*(matPa.Get(p, q) + matPb.Get(p, q))*integrals_.Get(i, j, p, q);
 				}
 			}
@@ -995,8 +894,6 @@ double Molecule<Container>::Ee_UHF(bool use_prev_C){
 		for(j = 0; j < n_bas_; ++j){
 			for(p = 0; p < n_bas_; ++p){
 				for(q = 0; q < n_bas_; ++q){
-					//Ee += matP.Get(i, j)*matP.Get(p, q)*(2*integrals_.Get(i,j,p,q) - integrals_.Get(i,q,p,j));
-					//Ee += (matPa.Get(i, j)*matPa.Get(p, q) + matPb.Get(i, j)*matPb.Get(p, q))*(integrals_.Get(i,j,p,q) - integrals_.Get(i,q,p,j));
 					Ee -= 0.5*(matPa.Get(i, j)*matPa.Get(p, q) + matPb.Get(i, j)*matPb.Get(p, q))*integrals_.Get(i, q, p, j);
 				}
 			}
@@ -1004,9 +901,6 @@ double Molecule<Container>::Ee_UHF(bool use_prev_C){
 	}
 	Ee += Vnn();
 	integrals_.Clear();
-	/*mtrx::Print(matH);
-	mtrx::Print(matFa);
-	mtrx::Print(matFb);*/
 	//std::cout << "Ee(UHF) = " << Ee << ", SCF convergence: " << (k != SCF_MAX_ITERS) << std::endl;
 	return Ee;
 }
