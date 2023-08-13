@@ -188,7 +188,6 @@ void Matrix<T>::swap(Matrix<T> &other) noexcept{
 
 template <typename T>
 void Matrix<T>::Copy(const Matrix<T> &other){
-	//printf("copy called");
 	Matrix<T> temp(other.n_rows_, other.m_cols_);
 	temp.Fill( [&other](int i, int j){
 		return other.mat_ptr_[other.m_cols_*i+j];
@@ -510,7 +509,6 @@ double GradMin(Function f, Container &v, double eps = GRADMIN_EPS, double step =
 			if(step < 1e-7) break;
 		}
 	}
-	//std::cout << "Step = " << step << std::endl;
 	delete []dfdr;
 	return u;
 }
@@ -570,47 +568,7 @@ double Norm(const Container &v){
 	}
 	return sqrt(res);
 }
-/*
-template<typename Container, typename Function> 
-double GradMin(Function f, Container &v, double step = 0.5){
-	double gradF, h = 1e-4, u, un;
-	int iter = 0, i, n = static_cast<int>(v.size());
-	Container v_res(v.size());
-	Container grad_v;
-	u = f(v);
-	grad_v = Gradient(f, v, h);
-	gradF = Norm(grad_v);
-	for(auto x : v){
-		std::cout << x << " ";
-	}
-	std::cout << "U = " << u << " gradU = " << gradF << std::endl;
-	if(gradF < GRADMIN_EPS) return u;
-	for(iter = 0; iter < GRADMIN_MAX_ITERS;){
-		for(i = 0; i < n; ++i){
-			v_res[i] = v[i] - step*grad_v[i]/gradF;
-		}
-		un = f(v_res);
-		if(un < u){
-			u = un;
-			v = v_res;
-			grad_v = Gradient(f, v, h);
-			gradF = Norm(grad_v);
-			++iter;
-			//printf("gradF = %6.3e, iteration %3d, step = %6.3e\n", gradF, iter, step);
-			for(auto x : v){
-				std::cout << x << " ";
-			}
-			std::cout << "U = " << u << " gradU = " << gradF << std::endl;
-			if(gradF < GRADMIN_EPS) break;
-		} else {
-			step = 0.5 * step;
-			if(step < 1e-8) break;
-		}
-	}
-	std::cout << "Step = " << step << std::endl;
-	return u;
-}*/
-
+			
 template<typename Container>
 double Norm2(const Container &v){
 	double res = 0;
@@ -697,51 +655,7 @@ bool GradNullSearch(Function f, Container &x){
 	std::cout << "| gradU = " << gradU << std::endl;
 	return true;
 }
-/*
-template<typename Container>
-const Container operator+(const Container &lhs, const Container &rhs){
-	Container res(lhs.size());
-	for(std::size_t i = 0; i < lhs.size(); ++i){
-		res[i] = lhs[i] + rhs[i];
-	}
-	return res;
-}
 
-template<typename Container>
-const Container operator-(const Container &lhs, const Container &rhs){
-	Container res(lhs.size());
-	for(std::size_t i = 0; i < lhs.size(); ++i){
-		res[i] = lhs[i] - rhs[i];
-	}
-	return res;
-}*/
-/*
-template<typename Container>
-typename std::vector<Container>::iterator AddCenter(std::vector<Container> &line){
-	if(line.empty()) return {};
-	double length = 0, half = 0, res, l;
-	for(std::size_t i = 0; i < line.size() - 1; ++i){
-		length += Norm(line[i] - line[i+1]);
-	}
-	//std::cout << "length = " << length << std::endl;
-	for(std::size_t i = 0; i < line.size() - 1; ++i){
-		res = half;
-		l = Norm(line[i] - line[i+1]);
-		half += l;
-		if(half >= length*0.5){
-			half = res;
-			res = length*0.5 - half;
-			Container x_c(line[i].size());
-			for(std::size_t j = 0; j < line[i].size(); ++j){
-				//x_c[j] = res * std::abs(line[i][j] - line[i+1][j])/l;
-				x_c[j] = res*(line[i+1][j] - line[i][j])/l + line[i][j];
-			}
-			line.insert(line.begin() + i + 1, x_c);
-			return line.begin() + i + 1;
-		}
-	}
-	return {};
-}*/
 
 template<typename Container>
 typename std::vector<Container>::iterator AddCenter(std::vector<Container> &line){
@@ -857,11 +771,6 @@ Container TSSearch(Function f, const Container &source1, const Container &source
 			nums.push_back(min_index);
 			new_way.push_back(way[min_index]);
 		}
-		//new_way.push_back(source2);
-		way = new_way;
-		/*std::sort(way.begin(), way.end() - 1, [&source1](const Container &a, const Container &b){
-				return Norm(a - source1) < Norm(b - source1);
-			});*/
 		for(std::size_t i = 0; i < way.size(); ++i){
 			std::cout << "( ";
 			for(auto it = way[i].begin(); it != way[i].end(); ++it){
@@ -874,24 +783,6 @@ Container TSSearch(Function f, const Container &source1, const Container &source
 	return *center;
 }
 }
-/*
-template<typename Container>
-const Container operator+(const Container &lhs, const Container &rhs){
-	Container res(lhs.size());
-	for(std::size_t i = 0; i < lhs.size(); ++i){
-		res[i] = lhs[i] + rhs[i];
-	}
-	return res;
-}
-
-template<typename Container>
-const Container operator-(const Container &lhs, const Container &rhs){
-	Container res(lhs.size());
-	for(std::size_t i = 0; i < lhs.size(); ++i){
-		res[i] = lhs[i] - rhs[i];
-	}
-	return res;
-}*/
 
 const std::vector<double> operator+(const std::vector<double> &lhs, const std::vector<double> &rhs);
 
