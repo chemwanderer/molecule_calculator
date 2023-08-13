@@ -2,12 +2,10 @@
 
 namespace mtrx{
 //A * x = B
-//template <typename T>
 Matrix<double> InverseSearch(const Matrix<double> &matA, const Matrix<double> &matB){
     return Inverse(matA) * matB;
 }
 
-//template <typename T>
 Matrix<double> Cramer(const Matrix<double> &matA, const Matrix<double> &matB){
     int i, j;
     double detA = matA.Determinant();
@@ -66,9 +64,6 @@ Eigen Eigen_QR(const Matrix<double> &source, int max_iters){
     int n = source.GetNRows(), m = source.GetNCols();
     assert(n == m);
     int i, j, iter;
-    /*for(i = 0; i < n; ++i){
-        if(std::abs(source.Minor(i, i)) < ZERO_EPS ) throw std::invalid_argument("QR-algorithm is not applicable");
-    }*/
     QR_decomposition<double> qr;
     Eigen eig;
     double max;
@@ -87,7 +82,6 @@ Eigen Eigen_QR(const Matrix<double> &source, int max_iters){
         }
         if(max < ZERO_EPS) break;
     }
-    //printf("QR terminated after %d iterations\n", iter);
     eig.iters = iter;
     return eig;
 }
@@ -145,15 +139,7 @@ Eigen Eigen_Jacobi(const Matrix<double> &source, int max_iters){
             vec_box.Set(i, j, res.eig_vec.Get(i, nums[j]));
         }
     }
-
-    //printf("Jacobi terminated after %d iterations\n", iter);
-    /*Eigen result;
-    result.eig_val = val_box;
-    result.eig_vec = vec_box;
-    result.iters = iter;
-    return result;*/
     return {vec_box, val_box, iter};
-    //return res;
 }
 
 SingleEigen Eigen_Power(const Matrix<double> &source, int max_iters = POWER_MAX_ITERS,
@@ -190,7 +176,6 @@ SingleEigen Eigen_Power(const Matrix<double> &source, int max_iters = POWER_MAX_
         }
         if(stop) break;
     }
-    printf("Power terminated after %d iterations\n", iter);
     return {res, (Transpose(res)*source*res).Get(0, 0)};
 }
 
@@ -240,10 +225,6 @@ Eigen VarTask(const Matrix<double> &matH, const Matrix<double> &matS,
     Matrix<double> matChiT = Transpose(matChi);
     Matrix<double> matB = matChi * matH * matChiT;
     Eigen pre_res = df(matB, max_iters);
-    /*Eigen result;
-    result.eig_val = pre_res.eig_val;
-    result.eig_vec = matChiT*pre_res.eig_vec;
-    return result;*/
     return {matChiT*pre_res.eig_vec, pre_res.eig_val};
 }
 
