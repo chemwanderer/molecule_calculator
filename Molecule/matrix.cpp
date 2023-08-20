@@ -228,6 +228,8 @@ Eigen VarTask(const Matrix<double> &matH, const Matrix<double> &matS,
     return {matChiT*pre_res.eig_vec, pre_res.eig_val};
 }
 
+}
+
 const std::vector<double> operator+(const std::vector<double> &lhs, const std::vector<double> &rhs){
     std::vector<double> res(lhs.size());
     for(std::size_t i = 0; i < lhs.size(); ++i){
@@ -242,6 +244,4 @@ const std::vector<double> operator-(const std::vector<double> &lhs, const std::v
         res[i] = lhs[i] - rhs[i];
     }
     return res;
-}
-
 }
