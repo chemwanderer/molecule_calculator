@@ -96,6 +96,8 @@ Matrix<double> InverseSearch(const Matrix<double>&, const Matrix<double>&);
 
 Matrix<double> Cramer(const Matrix<double>&, const Matrix<double>&);
 
+Matrix<double> Cholesky(const Matrix<double>&);
+
 template <typename T>
 Matrix<T>::Matrix(){
 	n_rows_ = 0;
